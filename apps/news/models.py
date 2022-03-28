@@ -1,15 +1,33 @@
 from bs4 import BeautifulSoup
-
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
-
 from taxonomy.models import Topic
+from lib.sitestuff import SiteModel, current_site
 
-from lib.sitestuff import SiteModel
+
+class WhatWeAreReading(SiteModel):
+    this_site = current_site().__str__()
+    
+    if this_site == 'biopharmadive.com':
+        temp = True
+    else:
+        temp = False
 
 
+    title = models.CharField(max_length=300)
+    link = models.URLField(unique=temp)
+    source = models.CharField(max_length=300)
+    publish_date = models.DateField(default=timezone.now)
+
+
+    def __str__(self):
+        return '<{}> {}'.format(self.site.domain, self.title)
+
+    def getDomain(self):
+        return self.site.domain
+    
 class NewsPost(SiteModel):
     title = models.CharField(max_length=300)
     body = models.TextField(max_length=6000)
@@ -18,6 +36,7 @@ class NewsPost(SiteModel):
     publish_date = models.DateField(default=timezone.now)
     active = models.BooleanField(default=True)
     topics = models.ManyToManyField(Topic)
+
 
     def __str__(self):
         return '<{}> {}'.format(self.site.domain, self.title)
@@ -58,3 +77,4 @@ class NewsPost(SiteModel):
         if text_value:
             results = results.filter(Q(body__icontains=text_value) | Q(title__icontains=text_value))
         return set(results.all())
+
